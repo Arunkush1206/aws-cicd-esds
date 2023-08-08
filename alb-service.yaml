@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: esds-test
+  labels:
+    app: esds-test
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: esds-test
+  template:
+    metadata:
+      labels:
+        app: esds-test
+    spec:
+      containers:
+        - name: personal-website
+          image: 552212359451.dkr.ecr.us-east-1.amazonaws.com/rr:2022-02-05.14.32.43-92bd4
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: esds-service
+spec:
+  selector:
+    app: esds-service
+  type: NodePort
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 80
+    - name: https
+      protocol: TCP
+      port: 443
+      targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: IngressClass
+metadata:
+  name: aws-class
+spec:
+  controller: ingress.k8s.aws/alb
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: esds-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:552212359451:certificate/d2176176-8b72-485f-bebe-48169fcca582"
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-2016-08
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+spec:
+  ingressClassName: aws-class
+  defaultBackend:
+    service:
+      name: esds-service
+      port:
+        number: 80
+  rules:
+    - host: ingress.kayandal.awsps.myinstance.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: esds-service
+                port:
+                  number: 80
+    - host: loki.kayandal.awsps.myinstance.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: loki-grafana
+                port:
+                  number: 80
