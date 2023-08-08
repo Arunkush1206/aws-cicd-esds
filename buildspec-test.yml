@@ -24,6 +24,9 @@ phases:
       - echo $AWS_ACCOUNT_ID
       - echo $IMAGE_REPO_NAME
       - echo "Prechecks Done."
+      - echo "Installing SonarScanner..."
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+      - unzip sonar-scanner-cli-4.7.0.2747-linux.zip
       - echo Logging in to Amazon ECR...
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 259571673617.dkr.ecr.ap-south-1.amazonaws.com
   build:
@@ -34,6 +37,11 @@ phases:
       - docker tag esds-repo:latest 259571673617.dkr.ecr.ap-south-1.amazonaws.com/esds-repo:latest     
   post_build:
     commands:
+      - echo "Running SonarScanner..."
+      - sonar-scanner/bin/sonar-scanner \
+            -Dsonar.projectKey=sample-deployment \
+            -Dsonar.host.url=http://13.126.84.108:9000 \
+            -Dsonar.login=sqp_4bb924af941db03b8425d7958b1d45b0997e6d80
       - echo Build completed on `date`
       - echo Pushing the Docker image...
       - docker push 259571673617.dkr.ecr.ap-south-1.amazonaws.com/esds-repo:latest
