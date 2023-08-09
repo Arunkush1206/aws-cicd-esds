@@ -38,7 +38,7 @@ phases:
   post_build:
     commands:
       - echo "Running SonarScanner..."
-      - sonar-scanner/bin/sonar-scanner \
+      - sonar-scanner-4.7.0.2747-linux/bin/sonar-scanner \
             -Dsonar.projectKey=sample-deployment \
             -Dsonar.host.url=http://13.126.84.108:9000 \
             -Dsonar.login=sqp_4bb924af941db03b8425d7958b1d45b0997e6d80
